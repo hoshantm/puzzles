@@ -14,6 +14,15 @@ class node:
         
     def __str__(self):
         return 'quantities={}, has_parent={}'.format(self.quantities, self.parent!=None)
+    
+def visited(node, quantities):
+    while True:
+        if node.quantities == quantities:
+            return True
+        elif node.parent == None:
+            return False
+        else:
+            node = node.parent
         
 from itertools import groupby
 def get_quantity_by_count(quantities):
@@ -44,15 +53,13 @@ def gen_solution(solution_node):
     solution_quantities_list.reverse()
     return solution_quantities_list    
         
-def solve(capacities, initial_quantities, final_quantities, allow_empty=False, allow_fill=False):
+def solver(capacities, initial_quantities, final_quantities, allow_empty=False, allow_fill=False):
     solution_found = gen_solution_found(final_quantities)
 
-    visited = [initial_quantities]
     node_queue = deque([node(initial_quantities, None)])
     while True:
         if len(node_queue) == 0:
-            return None
-            break
+            return 
             
         current_node = node_queue.popleft()
         current_quantities = current_node.quantities
@@ -64,12 +71,11 @@ def solve(capacities, initial_quantities, final_quantities, allow_empty=False, a
                     q_transfer = min(capacity_to - q_to, q_from)
                     new_quantities[i]-=q_transfer
                     new_quantities[j]+=q_transfer
-                    if new_quantities not in visited:
-                        visited.append(new_quantities)                
+                    if not visited(current_node, new_quantities):
                         new_node = node(new_quantities, current_node)
                                                                        
                         if solution_found(new_quantities):
-                            return gen_solution(new_node)
+                            yield gen_solution(new_node)
                         else:
                             node_queue.append(new_node)
 
@@ -77,12 +83,11 @@ def solve(capacities, initial_quantities, final_quantities, allow_empty=False, a
             if allow_empty and q_from > 0:
                 new_quantities = current_quantities.copy()
                 new_quantities[i] = 0
-                if new_quantities not in visited:
-                    visited.append(new_quantities)                
+                if not visited(current_node, new_quantities):
                     new_node = node(new_quantities, current_node)
                                                                    
                     if solution_found(new_quantities):
-                        return gen_solution(new_node)
+                        yield gen_solution(new_node)
                     else:
                         node_queue.append(new_node)
 
@@ -90,31 +95,45 @@ def solve(capacities, initial_quantities, final_quantities, allow_empty=False, a
             if allow_fill and q_from < capacities[i]:
                 new_quantities = current_quantities.copy()
                 new_quantities[i] = capacities[i]
-                if new_quantities not in visited:
-                    visited.append(new_quantities)                
+                if not visited(current_node, new_quantities):
                     new_node = node(new_quantities, current_node)
                                                                    
                     if solution_found(new_quantities):
-                        return gen_solution(new_node)
+                        yield gen_solution(new_node)
                     else:
                         node_queue.append(new_node)
 
 
-                        
-def solve_and_print(capacities, initial_quantities, final_quantities, allow_empty=False, allow_fill=False):
-    solution = solve(capacities, initial_quantities, final_quantities, allow_empty=allow_empty, allow_fill=allow_fill)
-    if solution != None:
-        print('Solution found in {} moves:'.format(len(solution)-1))
-        for move, quantities in enumerate(solution):
-            print('{} - {}'.format(move, quantities))
-    else:
-        print('No solution found.')
+def solve(capacities, initial_quantities, final_quantities, allow_empty=False, allow_fill=False):
+    solver_iterator = solver(capacities, initial_quantities, final_quantities, allow_empty=allow_empty, allow_fill=allow_fill)
+    solution = next(solver_iterator, None)
+    return solution
 
-def solve_standard_problem():
+                       
+def solve_and_print(capacities, initial_quantities, final_quantities, allow_empty=False, allow_fill=False, n_solutions=1):
+    solver_iterator = solver(capacities, initial_quantities, final_quantities, allow_empty=allow_empty, allow_fill=allow_fill)
+    i = 0
+    while i<n_solutions:
+        solution = next(solver_iterator, None)
+        if solution != None:
+            print('Solution found in {} moves:'.format(len(solution)-1))
+            for move, quantities in enumerate(solution):
+                print('{} - {}'.format(move, quantities))
+            print(' ' * 20)
+        else:
+            if i==0:
+                print('No solution found.')
+            elif i+1<n_solutions:
+                print('Only {} solutions found'.format(i+1))
+            break
+        i+=1
+
+
+def solve_standard_problem(n_solutions=1):
     capacities=[8, 5, 3]
     initial_quantities=[8, 0, 0]
     final_quantities = [4, 4]
-    solve_and_print(capacities, initial_quantities, final_quantities)
+    solve_and_print(capacities, initial_quantities, final_quantities, n_solutions=n_solutions)
         
 
 def find_toughest():
@@ -141,5 +160,5 @@ def find_toughest():
     
                         
 if __name__ == '__main__':
-    solve_standard_problem()
+    solve_standard_problem(n_solutions=3)
     
