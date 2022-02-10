@@ -58,7 +58,7 @@ def machine_solve():
         except ValueError:
             print('Invalid number of eggs')
             
-        if n_floors < 1:
+        if n_eggs < 1:
             print('You should have at least one egg\n')
         else:
             break
