@@ -28,10 +28,8 @@ def min_test_floor(n_eggs, l_floor, h_floor=None):
     
     if n_eggs == 1 or 0 <= h_floor - l_floor <= 1:
         return h_floor - l_floor + 1, l_floor
-    else:            
-        all_max = (max(min_test_floor(n_eggs, test_floor+1, h_floor) if test_floor < h_floor else (-1, -1), 
-                       min_test_floor(n_eggs-1, l_floor, test_floor-1) if test_floor > l_floor else (-1, -1)) 
-                   for test_floor in range(l_floor, h_floor+1))
+    else:
+        all_max = (max(min_test_floor(n_eggs, test_floor+1, h_floor) if test_floor < h_floor else (-1, -1), min_test_floor(n_eggs-1, l_floor, test_floor-1) if test_floor > l_floor else (-1, -1)) for test_floor in range(l_floor, h_floor+1))
 
         index, minimum=min(enumerate(all_max), key=itemgetter(1))
         try_floor = index + l_floor
@@ -58,7 +56,7 @@ def machine_solve():
         except ValueError:
             print('Invalid number of eggs')
             
-        if n_eggs < 1:
+        if n_floors < 1:
             print('You should have at least one egg\n')
         else:
             break
